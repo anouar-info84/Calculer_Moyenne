@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculateur de Moyenne</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F0F4FF;
+      --surface: #FFFFFF;
+      --primary: #2D5BFF;
+      --primary-dark: #1A40D4;
+      --primary-light: #EEF2FF;
+      --text: #0F1A3E;
+      --muted: #6B7A99;
+      --border: #D9E2FF;
+      --error: #E53E3E;
+      --error-bg: #FFF5F5;
+      --shadow-sm: 0 2px 8px rgba(45,91,255,.08);
+      --shadow-md: 0 8px 32px rgba(45,91,255,.12);
+      --shadow-lg: 0 20px 60px rgba(45,91,255,.16);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: var(--text);
+    }
+
+    /* Background decoration */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -200px;
+      right: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(45,91,255,.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -150px;
+      left: -150px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(99,152,255,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+    }
+
+    .badge svg { flex-shrink: 0; }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(28px, 5vw, 38px);
+      font-weight: 400;
+      color: var(--text);
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 36px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(45,91,255,.06);
+    }
+
+    /* Input group */
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    label svg { color: var(--primary); }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 14px 18px 14px 48px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      color: var(--text);
+      background: #FAFBFF;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    input[type="number"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(45,91,255,.1);
+      background: #fff;
+    }
+
+    input[type="number"].error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 4px rgba(229,62,62,.08);
+      background: var(--error-bg);
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      transition: color .2s;
+    }
+
+    .input-wrap:focus-within .input-icon { color: var(--primary); }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* Error message */
+    .error-msg {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: var(--error-bg);
+      border: 1px solid rgba(229,62,62,.25);
+      color: var(--error);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 18px;
+      animation: slideDown .25s ease;
+    }
+    .error-msg.show { display: flex; }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 24px 0;
+    }
+
+    /* Button */
+    .btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      letter-spacing: .02em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 16px rgba(45,91,255,.3);
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(45,91,255,.38);
+    }
+
+    .btn:active { transform: translateY(0); }
+
+    /* Result */
+    .result {
+      margin-top: 28px;
+      display: none;
+      animation: fadeUp .4s cubic-bezier(.22,1,.36,1);
+    }
+
+    .result.show { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .result-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .result-header .line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Result table */
+    .result-table {
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+
+    .result-row:last-child { border-bottom: none; }
+
+    .result-row:hover { background: rgba(45,91,255,.04); }
+
+    .row-label {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .row-label svg { color: var(--primary); flex-shrink: 0; }
+
+    .row-value {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Average highlight */
+    .result-row.avg {
+      background: var(--primary);
+    }
+
+    .result-row.avg .row-label { color: rgba(255,255,255,.75); }
+    .result-row.avg .row-label svg { color: #fff; }
+    .result-row.avg .row-value { color: #fff; font-size: 20px; }
+
+    /* Appreciation badge */
+    .appreciation-wrap {
+      margin-top: 16px;
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1.5px solid transparent;
+      transition: all .35s;
+    }
+
+    .appr-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      opacity: .7;
+    }
+
+    .appr-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    /* Appreciation color states */
+    .appr-fail      { background: #FFF5F5; border-color: #FEB2B2; color: #C53030; }
+    .appr-passable  { background: #FFFAF0; border-color: #FAD08A; color: #B7791F; }
+    .appr-assez     { background: #F0FFF4; border-color: #9AE6B4; color: #276749; }
+    .appr-bien      { background: #E6FFFA; border-color: #81E6D9; color: #285E61; }
+    .appr-tres-bien { background: #EBF8FF; border-color: #90CDF4; color: #2B6CB0; }
+    .appr-excellent { background: #FAF5FF; border-color: #D6BCFA; color: #553C9A; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .card { padding: 24px 20px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+      Gestion Scolaire
+    </div>
+    <h1>Calculateur<br>de Moyenne</h1>
+    <p class="subtitle">Saisissez deux notes pour obtenir la moyenne et l'appréciation</p>
+  </div>
+
+  <div class="card">
+    <!-- Note 1 -->
+    <div class="input-group">
+      <label for="note1">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M9 8h6M9 16h4"/></svg>
+        Note 1
+      </label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <input type="number" id="note1" placeholder="0 — 20" min="0" max="20" step="0.01" />
+      </div>
+      <p class="hint">Valeur entre 0 et 20</p>
+    </div>
+
+    <!-- Note 2 -->
+    <div class="input-group">
+      <label for="note2">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M9 8h6M9 16h4"/></svg>
+        Note 2
+      </label>
+      <div class="input-wrap">
+        <svg class="input-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <input type="number" id="note2" placeholder="0 — 20" min="0" max="20" step="0.01" />
+      </div>
+      <p class="hint">Valeur entre 0 et 20</p>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" id="errorMsg">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <span id="errorText"></span>
+    </div>
+
+    <!-- Button -->
+    <button class="btn" onclick="calculate()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M12 9h.01M15 9h.01M9 12h6M9 15h4"/></svg>
+      Calculer la moyenne
+    </button>
+
+    <!-- Result -->
+    <div class="result" id="result">
+      <div class="divider"></div>
+
+      <div class="result-header">
+        <h2>Résultat</h2>
+        <div class="line"></div>
+      </div>
+
+      <div class="result-table">
+        <div class="result-row">
+          <span class="row-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Note 1
+          </span>
+          <span class="row-value" id="resNote1">—</span>
+        </div>
+        <div class="result-row">
+          <span class="row-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Note 2
+          </span>
+          <span class="row-value" id="resNote2">—</span>
+        </div>
+        <div class="result-row avg">
+          <span class="row-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>
+            Moyenne
+          </span>
+          <span class="row-value" id="resMoyenne">—</span>
+        </div>
+      </div>
+
+      <div class="appreciation-wrap" id="appreciationWrap">
+        <span class="appr-label">Appréciation</span>
+        <span class="appr-value" id="appreciationText">—</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>Application de gestion scolaire &nbsp;·&nbsp; Notes sur 20</footer>
+</div>
+
+<script>
+  const input1 = document.getElementById('note1');
+  const input2 = document.getElementById('note2');
+
+  // Allow Enter key to trigger calculate
+  [input1, input2].forEach(el => {
+    el.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+    el.addEventListener('input', () => { el.classList.remove('error'); hideError(); });
+  });
+
+  function showError(msg) {
+    const box = document.getElementById('errorMsg');
+    document.getElementById('errorText').textContent = msg;
+    box.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorMsg').classList.remove('show');
+  }
+
+  function getAppreciation(avg) {
+    if (avg < 10)  return { text: 'Échec',     cls: 'appr-fail' };
+    if (avg < 12)  return { text: 'Passable',  cls: 'appr-passable' };
+    if (avg < 14)  return { text: 'Assez bien',cls: 'appr-assez' };
+    if (avg < 16)  return { text: 'Bien',      cls: 'appr-bien' };
+    if (avg < 18)  return { text: 'Très bien', cls: 'appr-tres-bien' };
+    return             { text: 'Excellent',    cls: 'appr-excellent' };
+  }
+
+  function fmt(n) {
+    // Show up to 2 decimal places, trim trailing zeros
+    return parseFloat(n.toFixed(2)).toString().replace('.', ',') + ' / 20';
+  }
+
+  function calculate() {
+    const v1 = input1.value.trim();
+    const v2 = input2.value.trim();
+    hideError();
+
+    // Validation: empty
+    if (v1 === '' || v2 === '') {
+      showError('Veuillez remplir les deux champs avant de calculer.');
+      if (v1 === '') input1.classList.add('error');
+      if (v2 === '') input2.classList.add('error');
+      return;
+    }
+
+    const n1 = parseFloat(v1);
+    const n2 = parseFloat(v2);
+
+    // Validation: range
+    const outOfRange = [];
+    if (isNaN(n1) || n1 < 0 || n1 > 20) { input1.classList.add('error'); outOfRange.push('Note 1'); }
+    if (isNaN(n2) || n2 < 0 || n2 > 20) { input2.classList.add('error'); outOfRange.push('Note 2'); }
+
+    if (outOfRange.length) {
+      showError(`${outOfRange.join(' et ')} : la valeur doit être comprise entre 0 et 20.`);
+      return;
+    }
+
+    const avg = (n1 + n2) / 2;
+    const appr = getAppreciation(avg);
+
+    // Populate results
+    document.getElementById('resNote1').textContent   = fmt(n1);
+    document.getElementById('resNote2').textContent   = fmt(n2);
+    document.getElementById('resMoyenne').textContent = fmt(avg);
+
+    const apprWrap = document.getElementById('appreciationWrap');
+    apprWrap.className = 'appreciation-wrap ' + appr.cls;
+    document.getElementById('appreciationText').textContent = appr.text;
+
+    // Show result with re-trigger animation
+    const res = document.getElementById('result');
+    res.classList.remove('show');
+    void res.offsetWidth; // reflow to re-trigger animation
+    res.classList.add('show');
+  }
+</script>
+</body>
+</html>
